@@ -1,0 +1,156 @@
+spring:
+  application:
+    name: user_service
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:user_service_db}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:123456}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        default_schema: public
+    show-sql: false
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+      properties:
+        spring.json.type.mapping: userEvent:com.eman.user_service.dto.UserEventMessage
+
+    consumer:
+      group-id: user-service-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+
+      properties:
+        spring.json.trusted.packages: "*"
+        spring.json.type.mapping: userEvent:com.eman.user_service.dto.UserEventMessage
+
+    listener:
+      ack-mode: MANUAL_IMMEDIATE
+      missing-topics-fatal: false
+  security:
+    user:
+      name: ${ACTUATOR_USERNAME:admin}
+      password: ${ACTUATOR_PASSWORD:admin123}
+
+
+# ===== JWT Configuration =====   
+jwt:
+  secret: ${JWT_SECRET:mySuperSecretKeyForJWTTokenGeneration2024VeryLongKey}
+  expiration: ${JWT_EXPIRATION:86400000} # 24 hours
+  refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000} # 7 days
+  issuer: ${JWT_ISSUER:task-manager}
+
+
+# ===== Tenant Configuration =====
+task_manager:
+  tenancy:
+    tenant-header-name: X-Tenant-ID
+    default-tenant-schema-prefix: tenant_
+    shared-table-schema: shared
+    auto-create-tenant-schema: true
+
+  admin:
+    email: admin@taskmanager.com
+    password: Admin@123
+    first-name: System
+    last-name: Administrator
+    tenant: acme
+# ===== Security Configuration =====
+security:
+  password:
+    min-length: 8
+    require-digit: true
+    require-uppercase: true
+    require-lowercase: true
+    require-special: false
+  rate-limit:
+    login-attempts: 5
+    login-window-minutes: 15
+    register-per-day: 3
+
+# ===== Eureka =====
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+    fetch-registry: false
+    register-with-eureka: false
+  instance:
+    prefer-ip-address: true
+    hostname: ${HOSTNAME:localhost}
+
+
+# ===== Actuator =====
+# Actuator endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "health,info,prometheus,metrics"
+  tracing:
+    sampling:
+      probability: 1.0
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+
+# ===== Logging =====
+logging:
+  level:
+    com.taskmanager.user: DEBUG
+    org.springframework.security: INFO
+    org.springframework.kafka: INFO
+  pattern:
+    console: "%clr(%d{yyyy-MM-dd HH:mm:ss}){faint} %clr([%thread]){faint} %clr(%-5level) %clr(%logger{36}){cyan} %clr(-){faint} %X{tenant} %msg%n"
+
+# ===== Swagger =====
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui/index.html
+    operationsSorter: method
+    tagsSorter: alpha
+    tryItOutEnabled: true
+    filter: true
+
+  show-actuator: true
+
+  packages-to-scan: com.eman.task_service.controller
+
+  paths-to-match: /api/**
