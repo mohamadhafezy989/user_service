@@ -66,7 +66,7 @@ spring:
 
 # ===== JWT Configuration =====   
 jwt:
-  secret: ${JWT_SECRET:mySuperSecretKeyForJWTTokenGeneration2024VeryLongKey}
+  secret: ${JWT_SECRET:mySuperSecretKeyForJWTTokenGeneration2026VeryLongKey}
   expiration: ${JWT_EXPIRATION:86400000} # 24 hours
   refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000} # 7 days
   issuer: ${JWT_ISSUER:task-manager}
@@ -154,3 +154,5 @@ springdoc:
   packages-to-scan: com.eman.task_service.controller
 
   paths-to-match: /api/**
+server:
+  port: 8081
